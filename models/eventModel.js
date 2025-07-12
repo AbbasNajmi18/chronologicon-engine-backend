@@ -32,4 +32,12 @@ const result= await pool.request().input('event_id', sql.Char(36), event_id).que
 return result.recordset;
 }
 
-module.exports = { insertEvent,getEventById,getChildrenEvents };
+async function getEvensInTimeRange(start_date, end_date) {
+const pool = await poolPromise;
+const result= await pool.request().input('start_date', sql.DateTime2, new Date(start_date))
+.input('end_date', sql.DateTime2, new Date(end_date))
+.query('SELECT * FROM historical_events WHERE start_date >= @start_date AND end_date <= @end_date', { start_date, end_date });
+return result.recordset;
+}
+
+module.exports = { insertEvent,getEventById,getChildrenEvents,getEvensInTimeRange };
