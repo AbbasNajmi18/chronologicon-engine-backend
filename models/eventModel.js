@@ -19,4 +19,17 @@ async function insertEvent(event) {
     `);
 }
 
-module.exports = { insertEvent };
+async function getEventById(event_id) {
+
+const pool = await poolPromise;
+const result= await pool.request().input('event_id', sql.Char(36), event_id).query('SELECT * FROM historical_events WHERE event_id = @event_id', { event_id });
+return result.recordset[0];
+}
+
+async function getChildrenEvents(event_id) {
+const pool = await poolPromise;
+const result= await pool.request().input('event_id', sql.Char(36), event_id).query('SELECT * FROM historical_events WHERE parent_event_id = @event_id', { event_id });
+return result.recordset;
+}
+
+module.exports = { insertEvent,getEventById,getChildrenEvents };
