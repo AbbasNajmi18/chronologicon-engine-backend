@@ -1,4 +1,4 @@
-const { getOverlapEventPairs } = require('../services/insightService');
+const { getOverlapEventPairs,findLargestTemporalGap } = require('../services/insightService');
 
 async function getOverlappingEvents(req, res) {
   const { startDate, endDate } = req.query;
@@ -16,4 +16,20 @@ async function getOverlappingEvents(req, res) {
   }
 }
 
-module.exports = { getOverlappingEvents };
+async function getLargestTemporalGap(req, res) {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+
+    try {
+      const largestGap = await findLargestTemporalGap(startDate, endDate);
+      res.status(200).json(largestGap);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+module.exports = { getOverlappingEvents,getLargestTemporalGap };
