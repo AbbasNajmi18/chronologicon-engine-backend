@@ -23,11 +23,17 @@ This backend is built for ArchaeoData Inc.'s Chronologicon Engine, designed to i
     ```bash
     sqlcmd -S localhost -U your_username -P your_password -i scripts/schema.sql
     ```
+    OR You can manually create the database using SQL Server Management Studio (SSMS) and run the schema.sql file
+
 4. Configure the database connection
     ```bash
     Update your username and password in db.js
     ```
-5. Run the server
+5. Test the connection
+    ```bash
+    node test-db.js
+    ```
+6. Run the server
     ```bash
     npm start
     ```
@@ -274,6 +280,7 @@ Curl command:
 ```bash
 curl -X GET http://localhost:3000/api/insights/temporal-gaps?startDate=2023-01-01T00:00:00Z&endDate=2023-01-20T00:00:00Z
 ```
+Scenario 1: Gap Found
 Response:
 ```json
     [
@@ -330,7 +337,22 @@ Response:
     }
 ]
 ```
+Scenario 2: No Gap Found
 
+```bash
+GET /api/insights/temporal-gaps?startDate=2024-01-01T00:00:00Z&endDate=2024-01-20T00:00:00Z
+```
+Curl command:
+```bash
+curl -X GET http://localhost:3000/api/insights/temporal-gaps?startDate=2024-01-01T00:00:00Z&endDate=2024-01-20T00:00:00Z
+```
+Response (200 OK NO GAP FOUND):
+```json
+{
+  "largestGap": null,
+  "message": "No significant temporal gaps found within the specified range, or too few events."
+}
+```
 ### The "Event Influence Spreader"
 
 Description : : Calculates the shortest temporal path (minimum total duration) between a source and a target event, following parent-child relationships.
@@ -381,20 +403,49 @@ curl -X GET http://localhost:3000/api/insights/event-influence-spreader?sourceEv
 ```
 Response (200 OK PATH NOT FOUND):
 ```json
-    {
+{
     "sourceEventId": "33333333-3333-3333-3333-333333333333",
     "targetEventId": "11111111-1111-1111-1111-111111111111",
     "shortestPath": [],
     "totalDurationMinutes": 0,
     "message": "No temporal path found from source to target event."
-    }
+}
 ```
+## Design Choices
 
+### Overall Design:
+- Layered architecture:  routes → controllers → services → models → DB
+- Clear separation of concerns
+- Scalable and maintainable code
 
+### 1. Event Ingestion
 
+- Line-by-line parsing: So one bad line doesn't crash the entire job
+- Validation: To ensure we don't insert invalid data
+- Async processing: So we don't block the main thread
 
+### 2. Get Timeline -  Recursive Timeline Fetch
 
+- Recursive strategy: Followed recursive approach to fetch children events
 
+### 3. Overlapping events 
+
+- Filter by data - Only data specified in the given range is considered
+
+### 4. Flexible Event search
+
+- Dynamic SQL generation: Based on optional filters
+- Pagination & offset support
+- Case-insensitive partial matching: LIKE %name% with LOWER()
+
+### 5. Gap finder
+
+- Sorting strategy - Events are sorted by start_date for a linear comparison
+- Edge case handling - If no events or too few events are found in the given range, returns appropriate message
+
+### 6. Event Influence Spreader
+
+- BFS strategy - Followed Breadth First Search approach to find the shortest path between source and target event
 
 
 

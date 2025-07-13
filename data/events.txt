@@ -2,8 +2,8 @@
 08d1ef80-89de-4ab3-b1b7-7d42db2e1100|Research Portal Launch|Beta version live|2023-02-01T10:00:00Z|2023-02-01T12:00:00Z||{"source": "release_notes"}
 6bc34a20-39e6-4667-a6ff-35d650f4c345|Team Expansion|Hired 5 new researchers|2023-03-01T09:00:00Z|2023-03-01T09:30:00Z||{"source": "HR report"}
 11111111-1111-1111-1111-111111111111|Event A|Start of timeline|2023-01-01T09:00:00Z|2023-01-01T10:00:00Z||{"note":"starts everything"}
-22222222-2222-2222-2222-222222222222|Event B|Shortly after A, overlaps with A|2023-01-01T09:30:00Z|2023-01-01T10:15:00Z||{"note":"overlaps with A"}
-33333333-3333-3333-3333-333333333333|Event C|Day later|2023-01-02T09:00:00Z|2023-01-02T09:30:00Z||{"note":"minimal gap"}
+22222222-2222-2222-2222-222222222222|Event B|Shortly after A, overlaps with A|2023-01-01T09:30:00Z|2023-01-01T10:15:00Z|11111111-1111-1111-1111-111111111111|{"note":"overlaps with A"}
+33333333-3333-3333-3333-333333333333|Event C|Day later|2023-01-02T09:00:00Z|2023-01-02T09:30:00Z|22222222-2222-2222-2222-222222222222|{"note":"minimal gap"}
 44444444-4444-4444-4444-444444444444|Event D|Large gap after C|2023-01-10T16:00:00Z|2023-01-10T17:00:00Z||{"note":"ends before gap"}
 55555555-5555-5555-5555-555555555555|Event E|Starts after big gap|2023-01-15T09:00:00Z|2023-01-15T10:00:00Z||{"note":"gap starts here"}
 66666666-6666-6666-6666-666666666666|Event F|Overlaps with E|2023-01-15T09:45:00Z|2023-01-15T10:30:00Z||{"note":"overlap with E"}
