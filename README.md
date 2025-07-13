@@ -23,7 +23,7 @@ This backend is built for ArchaeoData Inc.'s Chronologicon Engine, designed to i
     ```bash
     sqlcmd -S localhost -U your_username -P your_password -i scripts/schema.sql
     ```
-    OR You can manually create the database using SQL Server Management Studio (SSMS) and run the schema.sql file
+    OR You can manually run the schema.sql file using SQL Server Management Studio (SSMS)
 
 4. Configure the database connection
     ```bash
@@ -211,6 +211,7 @@ This backend is built for ArchaeoData Inc.'s Chronologicon Engine, designed to i
     ```bash
     curl -X GET http://localhost:3000/api/insights/overlapping-events?startDate=2023-01-01T00:00:00Z&endDate=2023-01-20T00:00:00Z
     ```
+    Scenario 1: Overlapping events found
     Response:
     ```json
         [
@@ -266,6 +267,11 @@ This backend is built for ArchaeoData Inc.'s Chronologicon Engine, designed to i
             "overlap_duration_minutes": 15
         }
     ]
+    ```
+    Scenario 2: No Overlapping events found
+    Response:
+    ```json
+    []
     ```
 
 ### The "Temporal Gap Finder"
