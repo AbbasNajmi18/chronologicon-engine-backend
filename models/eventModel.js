@@ -49,4 +49,55 @@ async function getSortEventsByStartDate(start_date,end_date) {
     return result.recordset;
 }
 
-module.exports = { insertEvent,getEventById,getChildrenEvents,getEvensInTimeRange,getSortEventsByStartDate };
+async function searchEvents(filters, sortBy, sortOrder, offset, limit) {
+  const pool = await poolPromise;
+
+  const whereClauses = [];
+  const params = [];
+
+  if (filters.name) {
+    whereClauses.push("LOWER(event_name) LIKE LOWER(@name)");
+    params.push({ key: 'name', type: sql.NVarChar, value: `%${filters.name}%` });
+  }
+
+  if (filters.start_date_after) {
+    whereClauses.push("start_date > @start_date_after");
+    params.push({ key: 'start_date_after', type: sql.DateTime2, value: new Date(filters.start_date_after) });
+  }
+
+  if (filters.end_date_before) {
+    whereClauses.push("end_date < @end_date_before");
+    params.push({ key: 'end_date_before', type: sql.DateTime2, value: new Date(filters.end_date_before) });
+  }
+
+  const whereSQL = whereClauses.length ? "WHERE " + whereClauses.join(" AND ") : "";
+  const orderSQL = sortBy ? `ORDER BY ${sortBy} ${sortOrder}` : "";
+
+  const countQuery = `SELECT COUNT(*) as total FROM historical_events ${whereSQL}`;
+  const countRequest = pool.request();
+  params.forEach(p => countRequest.input(p.key, p.type, p.value));
+  const countResult = await countRequest.query(countQuery);
+
+  const query = `
+    SELECT * FROM historical_events
+    ${whereSQL}
+    ${orderSQL}
+    OFFSET @offset ROWS
+    FETCH NEXT @limit ROWS ONLY;
+  `;
+  const dataRequest = pool.request();
+  params.forEach(p => dataRequest.input(p.key, p.type, p.value));
+  dataRequest.input("offset", sql.Int, offset);
+  dataRequest.input("limit", sql.Int, limit);
+
+  const result = await dataRequest.query(query);
+
+  return {
+    events: result.recordset,
+    total: countResult.recordset[0].total
+  };
+}
+
+
+
+module.exports = { insertEvent,getEventById,getChildrenEvents,getEvensInTimeRange,getSortEventsByStartDate,searchEvents };
