@@ -1,9 +1,13 @@
-const { getEvensInTimeRange,getSortEventsByStartDate } = require('../models/eventModel');
+const { getEvensInTimeRange,getSortEventsByStartDate,getEventById,getChildrenEvents } = require('../models/eventModel');
 
 function getOverlapMinutes(startDate1,endDate1,startDate2,endDate2) {
     const overlapStart = new Date(Math.max(startDate1, startDate2));
     const overlapEnd = new Date(Math.min(endDate1, endDate2));
     return Math.max(0, (overlapEnd - overlapStart) / 60000);
+}
+
+function getDurationMinutes(startDate,endDate) {
+    return Math.floor((new Date(endDate) - new Date(startDate)) / (1000 * 60));
 }
 
 async function getOverlapEventPairs(startDate,endDate) {
@@ -78,6 +82,67 @@ async function findLargestTemporalGap(startDate,end_date) {
     return { largestGap:null, message: "No significant temporal gaps found within the specified range, or too few events." };
 }
 
-module.exports = { getOverlapEventPairs,findLargestTemporalGap };
+async function findShortestInfluencePath(sourceEventId, targetEventId) {
+    const visited = new Set();
+    const queue = [];
+  
+    const sourceEvent = await getEventById(sourceEventId);
+    if (!sourceEvent) {
+      return { message: 'Source event not found.' };
+    }
+  
+    queue.push({
+      event: sourceEvent,
+      path: [{
+        event_id: sourceEvent.event_id,
+        event_name: sourceEvent.event_name,
+        duration_minutes: getDurationMinutes(sourceEvent.start_date, sourceEvent.end_date)
+      }],
+      totalDuration: getDurationMinutes(sourceEvent.start_date, sourceEvent.end_date)
+    });
+  
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const currentEvent = current.event;
+  
+      if (currentEvent.event_id === targetEventId) {
+        return {
+          sourceEventId: sourceEventId,
+          targetEventId: targetEventId,
+          shortestPath: current.path,
+          totalDurationMinutes: current.totalDuration,
+          message: 'Shortest temporal path found from source to target event.'
+        };
+      }
+  
+      visited.add(currentEvent.event_id);
+  
+      const children = await getChildrenEvents(currentEvent.event_id);
+      for (const child of children) {
+        if (!visited.has(child.event_id)) {
+          const duration = getDurationMinutes(child.start_date, child.end_date);
+          queue.push({
+            event: child,
+            path: [...current.path, {
+              event_id: child.event_id,
+              event_name: child.event_name,
+              duration_minutes: duration
+            }],
+            totalDuration: current.totalDuration + duration
+          });
+        }
+      }
+    }
+  
+    return {
+      sourceEventId: sourceEventId,
+      targetEventId: targetEventId,
+      shortestPath: [],
+      totalDurationMinutes: 0,
+      message: 'No temporal path found from source to target event.'
+    };
+}
+
+module.exports = { getOverlapEventPairs,findLargestTemporalGap, findShortestInfluencePath };
 
     
